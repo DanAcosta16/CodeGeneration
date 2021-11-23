@@ -56,7 +56,7 @@ public:
 
 class ConstExpr : public Expr{ //Dan
 private:
-	int value;
+.
 public:
 	ConstExpr(int val); //Dan
 	int eval(); //Dan
