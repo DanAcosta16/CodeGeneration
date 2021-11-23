@@ -30,7 +30,14 @@ map<string, string> symboltable; 	// map of variables to datatype (i.e. sum t_in
 
 
 // Runtime Global Methods
-void dump(); 				// prints vartable, instable, symboltable
+void dump(){
+	for(int i = 0; i < tokens.size(); i++){
+		cout << tokens[i] << endl;// prints vartable, instable, symboltable
+	}
+	for(auto itr = symboltable.begin(); itr != symboltable.end(); ++itr){
+		cout << (*itr).first << " " << (*itr).second << endl;
+	}
+}
 
 // You may need a few additional global methods to manipulate the global variables
 
@@ -80,11 +87,15 @@ private:
 	string name;
 public:
 	Stmt(){}
+	Stmt(string& name);
 	virtual ~Stmt(){};
 	virtual string toString() = 0;
 	virtual void execute() = 0;
+	void setName(string n){name = n;}
 };
-
+Stmt::Stmt(string& name){
+	setName(name);
+}
 class AssignStmt : public Stmt{
 private:
 	string var;
@@ -146,6 +157,7 @@ public:
 	string toString(); //Dan
 	void execute(); //Dan
 };
+//WhileStmt::WhileStmt();
 
 class GoToStmt: public Stmt{ //Dan
 private:
@@ -169,8 +181,8 @@ private:
 	void buildExpr(Expr*&);      Expr* buildExpr();
 
 	// headers for populate methods may not change
-	void populateTokenLexemes(istream& infile){}
-	void populateSymbolTable(istream& infile){}
+	void populateTokenLexemes(istream& infile);
+	void populateSymbolTable(istream& infile);
 public:
 	// headers may not change
 	Compiler(istream& source, istream& symbols){
@@ -180,16 +192,53 @@ public:
 
 	// The compile method is responsible for getting the instruction
 	// table built.  It will call the appropriate build methods.
-	bool compile(){}
+	bool compile(){
+
+	}
 
 	// The run method will execute the code in the instruction table
 	void run(){}
 };
+void Compiler::populateTokenLexemes(istream& infile){
+    string line, tok, lex;
+    int pos;
+    getline(infile, line);
+    bool valid = true;
+    while(!infile.eof() && (valid)){
+        pos = line.find(" ");
+        tok = line.substr(0, pos);
+        lex = line.substr(pos+1, line.length());
+        //cout << pos << " " << tok << " " << lex << endl;
+        tokens.push_back(tok);
+        lexemes.push_back(lex);
+        getline(infile, line);
+    }
+    tokitr = tokens.begin();
+    lexitr = lexemes.begin();
+}
+void Compiler::populateSymbolTable(istream& infile){
+    string line, tok, symbol;
+    int pos;
+    getline(infile, line);
+    bool valid = true;
+    while(!infile.eof() && (valid)){
+        pos = line.find(" ");
+        tok = line.substr(0, pos);
+        symbol = line.substr(pos+1, line.length());
+        cout << pos << " " << tok << " " << symbol << endl;
+        symboltable[tok] = symbol;
+        if(tok == "t_integer"){
+        	vartable[symbol] = 0;
+        }
+        getline(infile, line);
+    }
+}
 int main(){
-	ifstream infile1("source1.txt");
-	ifstream infile2("symbol1.txt");
+	ifstream infile1("toklex.txt");
+	ifstream infile2("symboltable.txt");
 	if (!infile1 || !infile2) exit(-1);
 	Compiler c(infile1, infile2);
+	dump();
 	c.compile();
 	c.run();
 	return 0;
