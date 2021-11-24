@@ -63,13 +63,29 @@ public:
 	string toString(); //Dan
 };
 
-class IdExpr : public Expr{
+class IdExpr : public Expr{//Guille
 private:
 	string id;
 public:
-	IdExpr(string s);
-	int eval();
-	string toString();
+	//Guille
+	IdExpr(string s){
+		id = s;
+	}
+	//Guille
+	int eval(){
+		map<string,string>:: iterator it = symboltable.find(id);
+		
+		if (it != symboltable.end()){
+			return 1;
+		}
+		else{
+			return 0;
+		}
+	}
+	//Guille
+	string toString(){
+		return id;
+	}
 };
 
 class InFixExpr : public Expr{
@@ -96,15 +112,45 @@ public:
 Stmt::Stmt(string& name){
 	setName(name);
 }
-class AssignStmt : public Stmt{
+class AssignStmt : public Stmt{//Guille
 private:
 	string var;
 	Expr* p_expr;
 public:
-	AssignStmt();
-	~AssignStmt();
+	//Guille
+	AssignStmt(){
+		name = "s_assign";
+		var = "";
+		p_expr = nullptr;
+	}
+	AssignStmt(Expr* p, string v){
+		p_expr = p;
+		var = v;
+	}
+	~AssignStmt(){
+		delete p_expr;
+		
+		p_expr = nullptr;
+	}
 	string toString();
-	void execute();
+	void execute(){
+		if (p_expr->eval() == 1){
+			var = p_expr->toString();
+		}
+	}
+	void setVar(string v){
+		var = v;
+	}
+	string getVar(){
+		return var;
+	}
+	void setExpr(Expr* p){
+		p_expr = p;
+	}
+	Expr* getExpr(){
+		return p_expr;
+	}
+	
 };
 
 class InputStmt : public Stmt{ //Dan
