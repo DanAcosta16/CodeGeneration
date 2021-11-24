@@ -13,7 +13,7 @@
 #include <map>
 #include <string>
 using namespace std;
-//COMMENT
+
 // You will need these forward references.
 class Expr;
 class Stmt;
