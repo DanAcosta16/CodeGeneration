@@ -56,13 +56,23 @@ public:
 
 class ConstExpr : public Expr{ //Dan
 private:
-.
+	int value;
 public:
 	ConstExpr(int val); //Dan
 	int eval(); //Dan
 	string toString(); //Dan
+	void setValue(int v){value = v;}
 };
-
+ConstExpr::ConstExpr(int value){
+	setValue(value);
+}
+int ConstExpr::eval(){
+	return value;
+}
+string ConstExpr::toString(){
+	string str = to_string(value);
+	return str;
+}
 class IdExpr : public Expr{//Guille
 private:
 	string id;
@@ -96,20 +106,30 @@ public:
 	~InFixExpr();
 	int eval();
 	string toString();
+	void addId(string id);
+	void addConst(int value);
+	void addOperator(string o){ops.push_back(o);}
 };
-
+void InFixExpr::addConst(int value){
+	Expr* ptr = new ConstExpr(value);
+	exprs.push_back(ptr);
+}
+void InFixExpr::addId(string id){
+	Expr* ptr = new IdExpr(id);
+	exprs.push_back(ptr);
+}
 class Stmt{ // statements are executed!
 private:
 	string name;
 public:
 	Stmt(){}
-	Stmt(string& name);
+	Stmt(string name);
 	virtual ~Stmt(){};
 	virtual string toString() = 0;
 	virtual void execute() = 0;
 	void setName(string n){name = n;}
 };
-Stmt::Stmt(string& name){
+Stmt::Stmt(string name){
 	setName(name);
 }
 class AssignStmt : public Stmt{//Guille
@@ -162,6 +182,14 @@ public:
 	string toString(); //Dan
 	void execute(); //Dan
 };
+InputStmt::InputStmt(){
+	name = "t_input";
+	var = "";
+}
+void InputStmt::execute(){
+	cout << "Enter a value: ";
+	cin >> var;
+}
 class StrOutStmt : public Stmt{ //Dan
 private:
 	string value;
@@ -171,7 +199,13 @@ public:
 	string toString(); //Dan
 	void execute(); //Dan
 };
-
+StrOutStmt::StrOutStmt(){
+	name = "t_strout";
+	value = " ";
+}
+void StrOutStmt::execute(){
+	cout << value << endl;
+}
 class ExprOutStmt : public Stmt{
 private:
 	Expr* p_expr;
@@ -199,11 +233,24 @@ private:
 	int elsetarget;
 public:
 	WhileStmt(); //Dan
+	WhileStmt(Expr* p, int elsetarget);
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
 };
-//WhileStmt::WhileStmt();
+WhileStmt::WhileStmt(){
+	name = "t_while";
+	p_expr = nullptr;
+	elsetarget = 0;
+}
+WhileStmt::WhileStmt(Expr* p, int e){
+	p_expr = p;
+	elsetarget = e;
+}
+string toString(){
+
+}
+
 
 class GoToStmt: public Stmt{ //Dan
 private:
@@ -238,13 +285,60 @@ public:
 
 	// The compile method is responsible for getting the instruction
 	// table built.  It will call the appropriate build methods.
-	bool compile(){
-
-	}
+	bool compile();
 
 	// The run method will execute the code in the instruction table
 	void run(){}
 };
+Expr* Compiler::buildExpr(){
+	InFixExpr infix;
+	tokitr++, lexitr++;
+	while(*tokitr != "s_rparen"){
+		if(*tokitr == "t_id"){
+			infix.addId(*lexitr);
+			tokitr++, lexitr++;
+		}
+		else if(*tokitr == "t_int"){
+			infix.addConst(stoi(*lexitr));
+			tokitr++, lexitr++;
+		}
+		else{
+			infix.addOperator(*lexitr);
+			tokitr++, lexitr++;
+		}
+	}
+}
+void Compiler::buildIf(){
+	tokitr++, lexitr++; //iterate to left parantheses
+	buildExpr();
+	tokitr++, lexitr++; //iterate past then
+	while(*tokitr != "t_if"){
+
+	}
+}
+bool Compiler::compile(){
+	while(*tokitr != "t_begin"){ //loop from beginning until begin is found
+				tokitr++, lexitr++;
+			}
+			tokitr++, lexitr++; //iterate to next token
+			while(tokitr!=tokens.end()){
+				if(*tokitr == "t_if"){
+					buildIf();
+				}
+				else if(*tokitr == "t_while"){
+					buildWhile();
+				}
+				else if(*tokitr == "t_id"){
+					buildAssign();
+				}
+				else if(*tokitr == "t_input"){
+					buildInput();
+				}
+				else if(*tokitr == "t_output"){
+					buildOutput();
+				}
+			}
+}
 void Compiler::populateTokenLexemes(istream& infile){
     string line, tok, lex;
     int pos;
