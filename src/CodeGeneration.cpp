@@ -108,6 +108,50 @@ public:
 	int eval();
 	string toString();
 };
+void InFixExpr::addConst(int value){
+	Expr* ptr = new ConstExpr(value);
+	exprs.push_back(ptr);
+}
+void InFixExpr::addId(string id){
+	Expr* ptr = new IdExpr(id);
+	exprs.push_back(ptr);
+}
+int InFixExpr::eval(){
+	vector<int> values;
+	int index = 0;
+	int result = 0;
+	for(int i=0; i < exprs.size();i++){
+		while(values.size() < 2 && index < exprs.size()){
+			values.push_back(exprs[index]->eval());
+			index++;
+		}
+		if(values.size() == 2){
+			if (ops[i] == "+"){
+				result = values[0] + values[1];
+			}
+			else if(ops[i] == "-"){
+				result = values[0] - values[1];
+			}
+			else if(ops[i] == "*"){
+				result = values[0] * values[1];
+			}
+			else if(ops[i] == "/"){
+				result = values[0] / values[1];
+			}
+			else if(ops[i] == "%"){
+				result = values[0] % values[1];
+			}
+			values[0] = result;
+			values.pop_back();
+
+		}
+		else{
+			result = values[0];
+		}
+	}
+	return result;
+
+}
 
 class Stmt{ // statements are executed!
 private:
