@@ -107,6 +107,8 @@ public:
 	~InFixExpr();
 	int eval();
 	string toString();
+	void addConst(int value);
+	void addId(string Id);
 };
 void InFixExpr::addConst(int value){
 	Expr* ptr = new ConstExpr(value);
@@ -237,6 +239,9 @@ void InputStmt::execute(){
 	cout << "Enter a value: ";
 	cin >> var;
 }
+string InputStmt::toString(){
+	return var;
+}
 class StrOutStmt : public Stmt{ //Dan
 private:
 	string value;
@@ -254,6 +259,9 @@ StrOutStmt::StrOutStmt(){
 }
 void StrOutStmt::execute(){
 	cout << value << endl;
+}
+string StrOutStmt::toString(){
+	return value;
 }
 class ExprOutStmt : public Stmt{
 private:
@@ -292,10 +300,6 @@ public:
 		elsetarget = e;
 	}
 	~IfStmt();
-<<<<<<< guillegonzalezf-patch-1-1
-=======
-
->>>>>>> master
 	string toString(){
 		return p_expr->toString();
 	}
@@ -328,15 +332,11 @@ public:
 	int getElseTarget(){
 		return elsetarget;
 	}
-<<<<<<< guillegonzalezf-patch-1-1
-};
-=======
 
 	IfStmt(Expr* p, int e);
 	string toString();
 	void execute();
->>>>>>> master
-
+};
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
@@ -347,6 +347,7 @@ public:
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setP(Expr* p){p_expr = p;}
 	void setElseTarget(int elset){
 		elsetarget = elset;
 	}
@@ -354,11 +355,14 @@ public:
 		return elsetarget;
 	}
 };
-WhileStmt::WhileStmt(Expr* p, int e){
-	p_expr = p;
-	elsetarget = e;
+WhileStmt::WhileStmt(){
+	setP(nullptr);
+	setElseTarget(0);
 }
-
+WhileStmt::WhileStmt(Expr* p, int elsetarget){
+	setP(p);
+	setElseTarget(elsetarget);
+}
 class GoToStmt: public Stmt{ //Dan
 private:
 	int elsetarget;
@@ -367,8 +371,19 @@ public:
 	~GoToStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setElse(int e){elsetarget = e;}
+	int getElse(){return elsetarget;}
 };
-
+GoToStmt::GoToStmt(){
+	setElse(0);
+}
+string GoToStmt::toString(){
+	string str = to_string(getElse());
+	return str;
+}
+void GoToStmt::execute(){
+	pc = getElse();
+};
 class Compiler{
 private:
 	ConstExpr* lastReferenced;
@@ -562,23 +577,6 @@ Expr* Compiler::buildExpr(){
 	}
 	Expr* ptr = &infix;
 	return ptr;
-}
-void Compiler::buildIf(){
-	tokitr++, lexitr++; //iterate to left parantheses
-	Expr* exptr = buildExpr();
-	tokitr++, lexitr++; //iterate past then
-	Stmt* ifptr = new IfStmt(exptr, 0);
-	insttable.push_back(ifptr);
-}
-void Compiler::buildWhile(){
-	tokitr++, lexitr++;
-	Expr* exptr = buildExpr();
-	tokitr++, lexitr++; //iterate past loop
-	Stmt* whileptr = new WhileStmt(exptr, 0);
-	insttable.push_back(whileptr);
-}
-void Compiler::buildAssign(){
-
 }
 bool Compiler::compile(){
 	while(*tokitr != "t_begin"){ //loop from beginning until begin is found
