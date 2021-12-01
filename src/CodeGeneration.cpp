@@ -408,7 +408,7 @@ WhileStmt::WhileStmt(){
 	setP(nullptr);
 	setElseTarget(0);
 }
-WhileStmt::WhileStmt(Expr* p, int elsetarget){
+WhileStmt::WhileStmt(Expr* p){
 	setP(p);
 }
 class GoToStmt: public Stmt{ //Dan
