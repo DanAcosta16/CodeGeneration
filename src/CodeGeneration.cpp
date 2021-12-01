@@ -122,22 +122,6 @@ void InFixExpr::addId(string id){
 string InFixExpr::toString(){
 
 }
-int InFixExpr::eval(){
-	int value = 0;
-	vector<string>::iterator opitr;
-	vector<Expr *>::iterator expitr;
-	opitr = ops.begin();
-	expitr = exprs.begin();
-	while(expitr != exprs.end()){
-		if(*opitr == "+"){
-			ConstExpr* constptr = dynamic_cast<ConstExpr*>(*expitr);
-			if(constptr != nullptr){
-				value = expitr->getValue();
-			}
-		}
-	}
-
-}
 class Stmt{ // statements are executed!
 private:
 	string name;
@@ -254,15 +238,7 @@ public:
 	IfStmt(Expr* p, int e);
 	string toString();
 	void execute();
-	void setP(Expr* p){p_expr = p;}
-	void setElse(int e){elsetarget = e;}
-	void setN(string n){setName(n);}
 };
-IfStmt::IfStmt(Expr* p, int e){
-	setP(p);
-	setElse(e);
-	setN("t_if");
-}
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
@@ -273,23 +249,11 @@ public:
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
-	void setN(string n){setName(n);}
-	void setP(Expr* p){p_expr = p;}
-	void setElse(int e){elsetarget = e;}
 };
-WhileStmt::WhileStmt(){
-	setN("");
-	setP(nullptr);
-	setElse(0);
-}
 WhileStmt::WhileStmt(Expr* p, int e){
 	p_expr = p;
 	elsetarget = e;
 }
-string toString(){
-
-}
-
 
 class GoToStmt: public Stmt{ //Dan
 private:
