@@ -62,6 +62,7 @@ public:
 	int eval(); //Dan
 	string toString(); //Dan
 	void setValue(int v){value = v;}
+	int getValue(){return value;}
 };
 ConstExpr::ConstExpr(int value){
 	setValue(value);
@@ -118,6 +119,25 @@ void InFixExpr::addId(string id){
 	Expr* ptr = new IdExpr(id);
 	exprs.push_back(ptr);
 }
+string InFixExpr::toString(){
+
+}
+int InFixExpr::eval(){
+	int value = 0;
+	vector<string>::iterator opitr;
+	vector<Expr *>::iterator expitr;
+	opitr = ops.begin();
+	expitr = exprs.begin();
+	while(expitr != exprs.end()){
+		if(*opitr == "+"){
+			ConstExpr* constptr = dynamic_cast<ConstExpr*>(*expitr);
+			if(constptr != nullptr){
+				value = expitr->getValue();
+			}
+		}
+	}
+
+}
 class Stmt{ // statements are executed!
 private:
 	string name;
@@ -139,11 +159,12 @@ private:
 public:
 	//Guille
 	AssignStmt(){
-		name = "s_assign";
-		var = "";
-		p_expr = nullptr;
+		setN("s_assign");
+		setVar("");
+		setExpr(nullptr);
 	}
 	AssignStmt(Expr* p, string v){
+		setN("s_assign");
 		p_expr = p;
 		var = v;
 	}
@@ -170,6 +191,9 @@ public:
 	Expr* getExpr(){
 		return p_expr;
 	}
+	void setN(string name){
+		setName(name);
+	}
 	
 };
 
@@ -181,10 +205,12 @@ public:
 	~InputStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setN(string n){setName(n);}
+	void setVar(string v){var = v;}
 };
 InputStmt::InputStmt(){
-	name = "t_input";
-	var = "";
+	setN("t_input");
+	setVar("");
 }
 void InputStmt::execute(){
 	cout << "Enter a value: ";
@@ -198,10 +224,12 @@ public:
 	~StrOutStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setN(string n){setName(n);}
+	void setValue(string v){value = v;}
 };
 StrOutStmt::StrOutStmt(){
-	name = "t_strout";
-	value = " ";
+	setN("t_strout");
+	setValue("");
 }
 void StrOutStmt::execute(){
 	cout << value << endl;
@@ -223,10 +251,18 @@ private:
 public:
 	IfStmt();
 	~IfStmt();
+	IfStmt(Expr* p, int e);
 	string toString();
 	void execute();
+	void setP(Expr* p){p_expr = p;}
+	void setElse(int e){elsetarget = e;}
+	void setN(string n){setName(n);}
 };
-
+IfStmt::IfStmt(Expr* p, int e){
+	setP(p);
+	setElse(e);
+	setN("t_if");
+}
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
@@ -237,11 +273,14 @@ public:
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setN(string n){setName(n);}
+	void setP(Expr* p){p_expr = p;}
+	void setElse(int e){elsetarget = e;}
 };
 WhileStmt::WhileStmt(){
-	name = "t_while";
-	p_expr = nullptr;
-	elsetarget = 0;
+	setN("");
+	setP(nullptr);
+	setElse(0);
 }
 WhileStmt::WhileStmt(Expr* p, int e){
 	p_expr = p;
@@ -307,14 +346,25 @@ Expr* Compiler::buildExpr(){
 			tokitr++, lexitr++;
 		}
 	}
+	Expr* ptr = &infix;
+	return ptr;
 }
 void Compiler::buildIf(){
 	tokitr++, lexitr++; //iterate to left parantheses
-	buildExpr();
+	Expr* exptr = buildExpr();
 	tokitr++, lexitr++; //iterate past then
-	while(*tokitr != "t_if"){
+	Stmt* ifptr = new IfStmt(exptr, 0);
+	insttable.push_back(ifptr);
+}
+void Compiler::buildWhile(){
+	tokitr++, lexitr++;
+	Expr* exptr = buildExpr();
+	tokitr++, lexitr++; //iterate past loop
+	Stmt* whileptr = new WhileStmt(exptr, 0);
+	insttable.push_back(whileptr);
+}
+void Compiler::buildAssign(){
 
-	}
 }
 bool Compiler::compile(){
 	while(*tokitr != "t_begin"){ //loop from beginning until begin is found
