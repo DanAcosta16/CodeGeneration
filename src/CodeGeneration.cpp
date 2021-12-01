@@ -104,6 +104,10 @@ private:
 	vector<Expr *> exprs;
 	vector<string> ops;  // tokens of operators
 public:
+	InFixExpr(vector<Expr*> exprs,vector<string> ops){
+		this->exprs = exprs;
+		this->ops = ops;
+	}
 	~InFixExpr();
 	int eval();
 	string toString();
@@ -143,6 +147,57 @@ int InFixExpr::eval(){
 			else if(ops[i] == "%"){
 				result = values[0] % values[1];
 			}
+			else if(ops[i] == ">"){
+				if(values[0] > values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+			else if(ops[i] == "<"){
+				if(values[0] < values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+			else if(ops[i] == ">="){
+				if(values[0] >= values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+			else if(ops[i] == "<="){
+				if(values[0] <= values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+			else if(ops[i] == "=="){
+				if(values[0] == values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+			else if(ops[i] == "!="){
+				if(values[0] != values[1]){
+					return 1;
+				}
+				else{
+					return 0;
+				}
+			}
+
+
+
 			values[0] = result;
 			values.pop_back();
 
@@ -174,47 +229,39 @@ private:
 	string var;
 	Expr* p_expr;
 public:
-	//Guille
-	AssignStmt(){
-		name = "s_assign";
-		var = "";
-		p_expr = nullptr;
-	}
-	AssignStmt(string v, Expr* p){
-		var = v;
-		p_expr = p;
-	}
-	~AssignStmt(){
-		delete p_expr;
-		
-		p_expr = nullptr;
-	}
-	string toString(){
-		return var;
-	}
-	void execute(){
-		if (p_expr->eval() == 1){
-			var = p_expr->toString();
-			vartable[var] = p_expr->eval();
-		}
-		else{
-			//Raise exception
-		}
-	}
-	void setVar(string v){
-		var = v;
-	}
-	string getVar(){
-		return var;
-	}
-	void setExpr(Expr* p){
-		p_expr = p;
-	}
-	Expr* getExpr(){
-		return p_expr;
-	}
-	
+	AssignStmt();
+	AssignStmt(string v, Expr* p);
+	~AssignStmt();
+	string toString();
+	void execute();
+	void setVar(string v){var = v;}
+	string getVar(){return var;}
+	void setExpr(Expr* p){p_expr = p;}
+	Expr* getExpr(){return p_expr;}
+
 };
+AssignStmt::AssignStmt(){
+	setName("s_assign");
+	setVar("");
+	setExpr(nullptr);
+}
+AssignStmt::AssignStmt(string v, Expr* p){
+	setVar(v);
+	setExpr(p);
+}
+AssignStmt::~AssignStmt(){
+	delete p_expr;
+	p_expr = nullptr;
+}
+string AssignStmt::toString(){
+	return var;
+}
+void AssignStmt::execute(){
+	if (p_expr->eval() == 1){
+		var = p_expr->toString();
+		vartable[var] = p_expr->eval();
+	}
+}
 
 class InputStmt : public Stmt{ //Dan
 private:
@@ -263,58 +310,42 @@ class ExprOutStmt : public Stmt{
 private:
 	Expr* p_expr;
 public:
-	ExprOutStmt(){
-		p_expr = nullptr;
-	}
-	ExprOutStmt(Expr* p){
-		p_expr = p;
-	}
-	~ExprOutStmt(){
-		delete p_expr;
-		p_expr = nullptr;
-	}
-	string toString(){
-		return p_expr->toString();
-	}
-	void execute(){
-		cout << p_expr-eval()<< endl;
-	}
+	ExprOutStmt();
+	ExprOutStmt(Expr* p);
+	~ExprOutStmt();
+	string toString();
+	void execute();
+	void setExpr(Expr* p){this->p_expr = p_expr;}
+	Expr* getExpr(){return p_expr;}
 };
+ExprOutStmt::ExprOutStmt(){
+	p_expr = nullptr;
+}
+ExprOutStmt::ExprOutStmt(Expr* p_expr){
+	this->p_expr=p_expr;
+}
+ExprOutStmt::~ExprOutStmt(){
+	delete p_expr;
+	p_expr = nullptr;
+}
+string ExprOutStmt::toString(){
+	return p_expr->toString();
+}
+void ExprOutStmt::execute(){
+	cout << p_expr->toString()<< endl;
+}
 
 class IfStmt : public Stmt{
 private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt(){
-		name  = "t_if";
-		p_expr = nullptr;
-		elsetarget = 0;
-	}
-	IfStmt(Expr* p){
-		p_expr = p;
-	}
+	IfStmt();
+	IfStmt(Expr* p);
 	~IfStmt();
-	string toString(){
-		return p_expr->toString();
-	}
-	void execute(){
-		if(p_expr->eval()){
-			int index = -1;
-			bool found = false;
-			for(int i=0; i<insttable.size() && !found ;i++){
-				if(insttable[i] == this){
-					index = i;
-					found = true;
-				}
-			}
-			insttable[index+1]->execute();
-
-		}
-		else{
-			insttable[elsetarget]->execute();
-		}
-	}
+	string toString();
+	void execute();
+	void setP(Expr* p){p_expr=p;}
 	void setExpr(Expr* p){
 		p_expr = p;
 	}
@@ -327,18 +358,41 @@ public:
 	int getElseTarget(){
 		return elsetarget;
 	}
-
-	string toString(){
-		return "t_if";
-	}
 };
+IfStmt::IfStmt(){
+	setP(nullptr);
+	setElseTarget(0);
+}
+IfStmt::IfStmt(Expr* p){
+	setP(p);
+	setElseTarget(-1);
+}
+void IfStmt::execute(){
+	int index = -1;
+	bool found = false;
+	for(int i=0; i<insttable.size() && !found ;i++){
+		if(insttable[i] == this){
+			index = i;
+			found = true;
+		}
+	}
+	if(p_expr->eval()){
+		insttable[index+1]->execute();
+	}
+	else{
+		insttable[elsetarget]->execute();
+	}
+}
+string IfStmt::toString(){
+	return p_expr->toString();
+}
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
 	int elsetarget;
 public:
 	WhileStmt(); //Dan
-	WhileStmt(Expr* p, int elsetarget);
+	WhileStmt(Expr* p);
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
@@ -356,7 +410,6 @@ WhileStmt::WhileStmt(){
 }
 WhileStmt::WhileStmt(Expr* p, int elsetarget){
 	setP(p);
-	setElseTarget(elsetarget);
 }
 class GoToStmt: public Stmt{ //Dan
 private:
@@ -461,13 +514,13 @@ private:
 				tokitr++;
 				lexitr++;
 			}
-			tokitr++;
-			lexitr++;
+			WhileStmt* whileStmt = new WhileStmt(new InFixExpr(expressions, operators));
+			insttable.push_back(whileStmt);
+			instIndex++;
+			lastWhile = whileStmt;
+			
 		}
-		WhileStmt* whileStmt = new WhileStmt(new InFixExpr(expressions, operators));
-		insttable.push_back(whileStmt);
-		instIndex++;
-		lastWhile = whileStmt;
+		
 	}
 	void buildStmt();
 	void buildAssign(){
@@ -523,11 +576,11 @@ private:
 				lexitr++;
 
 				if(token == "t_id"){
-					insttable.push_back(new ExprOutStmt(IdExpr(lexeme)));
+					//insttable.push_back(new ExprOutStmt(IdExpr(lexeme)));
 					instIndex++;
 				}
 				else if(token == "t_str"){
-					insttable.push_back(new StrOutStmt(lexeme));
+					//insttable.push_back(new StrOutStmt(lexeme));
 					instIndex++;
 				}
 			}
