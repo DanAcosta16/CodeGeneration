@@ -176,14 +176,13 @@ private:
 public:
 	//Guille
 	AssignStmt(){
-		setN("s_assign");
-		setVar("");
-		setExpr(nullptr);
+		name = "s_assign";
+		var = "";
+		p_expr = nullptr;
 	}
-	AssignStmt(Expr* p, string v){
-		setN("s_assign");
-		p_expr = p;
+	AssignStmt(string v, Expr* p){
 		var = v;
+		p_expr = p;
 	}
 	~AssignStmt(){
 		delete p_expr;
@@ -213,9 +212,6 @@ public:
 	}
 	Expr* getExpr(){
 		return p_expr;
-	}
-	void setN(string name){
-		setName(name);
 	}
 	
 };
@@ -295,9 +291,8 @@ public:
 		p_expr = nullptr;
 		elsetarget = 0;
 	}
-	IfStmt(Expr* p,int e){
+	IfStmt(Expr* p){
 		p_expr = p;
-		elsetarget = e;
 	}
 	~IfStmt();
 	string toString(){
@@ -333,9 +328,9 @@ public:
 		return elsetarget;
 	}
 
-	IfStmt(Expr* p, int e);
-	string toString();
-	void execute();
+	string toString(){
+		return "t_if";
+	}
 };
 class WhileStmt : public Stmt{ //Dan
 private:
@@ -556,7 +551,26 @@ public:
 	bool compile();
 
 	// The run method will execute the code in the instruction table
-	void run(){}
+	void run(){
+		IfStmt*  ifRef = nullptr;
+		WhileStmt* whileRef = nullptr;
+		for(int i = 0; i < insttable.size(); i++){
+			if(insttable[i]->toString() == "t_if"){
+				//downcasting to access the if statment functions
+				if(((IfStmt*) insttable[i])->getElseTarget() != i){
+					insttable[i]->execute();
+				}
+			}
+			else if(insttable[i]->toString() == "t_while"){
+				if(((WhileStmt*)insttable[i])->getElseTarget() != i){
+					insttable[i]->execute();
+				}
+			}
+			else{
+				insttable[i]->execute();
+			}
+		}
+	}
 };
 Expr* Compiler::buildExpr(){
 	InFixExpr infix;
