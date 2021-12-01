@@ -107,21 +107,8 @@ public:
 	~InFixExpr();
 	int eval();
 	string toString();
-	void addId(string id);
-	void addConst(int value);
-	void addOperator(string o){ops.push_back(o);}
 };
-void InFixExpr::addConst(int value){
-	Expr* ptr = new ConstExpr(value);
-	exprs.push_back(ptr);
-}
-void InFixExpr::addId(string id){
-	Expr* ptr = new IdExpr(id);
-	exprs.push_back(ptr);
-}
-string InFixExpr::toString(){
 
-}
 class Stmt{ // statements are executed!
 private:
 	string name;
