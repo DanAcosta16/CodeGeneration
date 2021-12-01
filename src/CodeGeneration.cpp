@@ -86,7 +86,7 @@ public:
 		map<string,string>:: iterator it = symboltable.find(id);
 		
 		if (it != symboltable.end()){
-			return 1;
+			return vartable[id];
 		}
 		else{
 			return 0;
@@ -118,6 +118,42 @@ void InFixExpr::addId(string id){
 	Expr* ptr = new IdExpr(id);
 	exprs.push_back(ptr);
 }
+int InFixExpr::eval(){
+	vector<int> values;
+	int index = 0;
+	int result = 0;
+	for(int i=0; i < exprs.size();i++){
+		while(values.size() < 2 && index < exprs.size()){
+			values.push_back(exprs[index]->eval());
+			index++;
+		}
+		if(values.size() == 2){
+			if (ops[i] == "+"){
+				result = values[0] + values[1];
+			}
+			else if(ops[i] == "-"){
+				result = values[0] - values[1];
+			}
+			else if(ops[i] == "*"){
+				result = values[0] * values[1];
+			}
+			else if(ops[i] == "/"){
+				result = values[0] / values[1];
+			}
+			else if(ops[i] == "%"){
+				result = values[0] % values[1];
+			}
+			values[0] = result;
+			values.pop_back();
+
+		}
+		else{
+			result = values[0];
+		}
+	}
+	return result;
+
+}
 class Stmt{ // statements are executed!
 private:
 	string name;
@@ -128,6 +164,7 @@ public:
 	virtual string toString() = 0;
 	virtual void execute() = 0;
 	void setName(string n){name = n;}
+	string getName(){return  name;}
 };
 Stmt::Stmt(string name){
 	setName(name);
@@ -152,10 +189,16 @@ public:
 		
 		p_expr = nullptr;
 	}
-	string toString();
+	string toString(){
+		return var;
+	}
 	void execute(){
 		if (p_expr->eval() == 1){
 			var = p_expr->toString();
+			vartable[var] = p_expr->eval();
+		}
+		else{
+			//Raise exception
 		}
 	}
 	void setVar(string v){
@@ -210,10 +253,22 @@ class ExprOutStmt : public Stmt{
 private:
 	Expr* p_expr;
 public:
-	ExprOutStmt();
-	~ExprOutStmt();
-	string toString();
-	void execute();
+	ExprOutStmt(){
+		p_expr = nullptr;
+	}
+	ExprOutStmt(Expr* p){
+		p_expr = p;
+	}
+	~ExprOutStmt(){
+		delete p_expr;
+		p_expr = nullptr;
+	}
+	string toString(){
+		return p_expr->toString();
+	}
+	void execute(){
+		cout << p_expr-eval()<< endl;
+	}
 };
 
 class IfStmt : public Stmt{
@@ -221,10 +276,48 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt();
+	IfStmt(){
+		name  = "t_if";
+		p_expr = nullptr;
+		elsetarget = 0;
+	}
+	IfStmt(Expr* p,int e){
+		p_expr = p;
+		elsetarget = e;
+	}
 	~IfStmt();
-	string toString();
-	void execute();
+	string toString(){
+		return p_expr->toString();
+	}
+	void execute(){
+		if(p_expr->eval()){
+			int index = -1;
+			bool found = false;
+			for(int i=0; i<insttable.size() && !found ;i++){
+				if(insttable[i] == this){
+					index = i;
+					found = true;
+				}
+			}
+			insttable[index+1]->execute();
+
+		}
+		else{
+			insttable[elsetarget]->execute();
+		}
+	}
+	void setExpr(Expr* p){
+		p_expr = p;
+	}
+	Expr* getExpr(){
+		return p_expr;
+	}
+	void setElseTarget(int elset){
+		elsetarget = elset;
+	}
+	int getElseTarget(){
+		return elsetarget;
+	}
 };
 
 class WhileStmt : public Stmt{ //Dan
@@ -237,6 +330,12 @@ public:
 	~WhileStmt(); //Dan
 	string toString(); //Dan
 	void execute(); //Dan
+	void setElseTarget(int elset){
+		elsetarget = elset;
+	}
+	int getElseTarget(){
+		return elsetarget;
+	}
 };
 WhileStmt::WhileStmt(){
 	name = "t_while";
@@ -264,12 +363,158 @@ public:
 
 class Compiler{
 private:
-	void buildIf();
-	void buildWhile();
+	ConstExpr* lastReferenced;
+	IfStmt* lastIf;
+	WhileStmt* lastWhile;
+	
+	int instIndex = 1;
+	void buildIf(){
+		string token = *tokitr;
+		string lexeme = *lexitr;
+		
+		if(lastIf != nullptr){
+			lastIf->setElseTarget(instIndex);
+			lastIf = nullptr;
+			
+			tokitr++;
+			lexitr++;
+		}
+		else if(lastIf == nullptr){
+			tokitr++;
+			lexitr++;
+			
+			token = *tokitr;
+			lexeme = *lexitr;
+
+			vector<Expr*> expressions;
+			vector<string> operators;
+
+			while(token != "t_then" && tokitr != tokens.end()){
+				if(token == "t_id"){
+					expressions.push_back(new IdExpr(lexeme));
+				}
+				else if(token == "t_int"){
+					expressions.push_back(new ConstExpr(atoi(lexeme.c_str())));
+				}
+				else if(token == "s_gt" || token == "s_lt" || token == "s_le" ||
+						token == "s_ge" || token == "s_ne" || token == "s_eq"){
+					operators.push_back(lexeme);
+				}
+				tokitr++;
+				lexitr++;
+			}
+			IfStmt* ifStmt = new IfStmt(new InFixExpr(expressions,operators));
+			lastIf = ifStmt;
+			
+			insttable.push_back(ifStmt);
+			instIndex++;
+		}
+	}
+	void buildWhile(){
+		string token = *tokitr;
+		string lexeme = *lexitr;
+
+		if(token == "t_loop"  && lastWhile != nullptr){
+			lastWhile->setElseTarget(instIndex);
+			lastWhile = nullptr;
+			
+			tokitr++;
+			lexitr++;
+		}
+		else if(token == "t_while"){
+			tokitr++;
+			lexitr++;
+			token = *tokitr;
+			lexeme = *lexitr;
+			
+			vector<Expr*> expressions;
+			vector<string> operators;
+
+			while (token != "t_loop" && tokitr != tokens.end()) {
+				if (token == "t_id") {
+					expressions.push_back(new IdExpr(lexeme));
+				} else if (token == "t_int") {
+					expressions.push_back(new ConstExpr(atoi(lexeme.c_str())));
+				} else if (token == "s_gt" || token == "s_lt" || token == "s_le" ||
+						   token == "s_ge" || token == "s_eq" || token == "s_ne") {
+					operators.push_back(lexeme);
+				}
+
+				tokitr++;
+				lexitr++;
+			}
+			tokitr++;
+			lexitr++;
+		}
+		WhileStmt* whileStmt = new WhileStmt(new InFixExpr(expressions, operators));
+		insttable.push_back(whileStmt);
+		instIndex++;
+		lastWhile = whileStmt;
+	}
 	void buildStmt();
-	void buildAssign();
+	void buildAssign(){
+		string token = *tokitr;
+		string lexeme = *lexitr;
+
+		if(token == "s_assign"){
+			tokitr++;
+			lexitr++;
+
+			token = *tokitr;
+			lexeme = *lexitr;
+
+			vector<Expr*> expressions;
+			vector<string> operators;
+
+			while(token != "s_semi"){
+				if(token == "t_int"){
+					int value = atoi(lexeme.c_str());
+
+					expressions.push_back(new ConstExpr(value));
+				}
+				else if(token == "t_id"){
+					map<string,int>::iterator it = vartable.find(lexeme);
+					if(it != vartable.end()){
+						expressions.push_back(new ConstExpr(it->second));
+					}
+				}
+				else if(token == "s_plus" || token == "s_minus" || token == "s_multi" || token == "s_div" || token == "s_mod"){
+					operators.push_back(lexeme);
+				}
+				tokitr++;
+				lexitr++;
+			}
+
+			InFixExpr* infix = new InFixExpr(expressions,operators);
+			insttable.push_back(new AssignStmt(lastReferenced->toString(),infix));
+
+
+		}
+
+	}
 	void buildInput();
-	void buildOutput();
+	void buildOutput(){
+		string token = *tokitr;
+		string lexeme = *lexitr;
+
+		if(token == "t_output"){
+			tokitr++;
+			lexitr++;
+			while(token == "t_end"){
+				tokitr++;
+				lexitr++;
+
+				if(token == "t_id"){
+					insttable.push_back(new ExprOutStmt(IdExpr(lexeme)));
+					instIndex++;
+				}
+				else if(token == "t_str"){
+					insttable.push_back(new StrOutStmt(lexeme));
+					instIndex++;
+				}
+			}
+		}
+	}
 	// use one of the following buildExpr methods
 	void buildExpr(Expr*&);      Expr* buildExpr();
 
