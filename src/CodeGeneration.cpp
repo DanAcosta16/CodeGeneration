@@ -152,6 +152,10 @@ int InFixExpr::eval(){
 	return result;
 
 }
+<<<<<<< guillegonzalezf-patch-1-1
+=======
+
+>>>>>>> master
 
 class Stmt{ // statements are executed!
 private:
@@ -264,12 +268,54 @@ private:
 	Expr* p_expr;
 	int elsetarget;
 public:
-	IfStmt();
+	IfStmt(){
+		name  = "t_if";
+		p_expr = nullptr;
+		elsetarget = 0;
+	}
+	IfStmt(Expr* p,int e){
+		p_expr = p;
+		elsetarget = e;
+	}
 	~IfStmt();
+<<<<<<< guillegonzalezf-patch-1-1
+	string toString(){
+		return p_expr->toString();
+	}
+	void execute(){
+		if(p_expr->eval()){
+			int index = -1;
+			bool found = false;
+			for(int i=0; i<insttable.size() && !found ;i++){
+				if(insttable[i] == this){
+					index = i;
+					found = true;
+				}
+			}
+			insttable[index+1]->execute();
+
+		}
+		else{
+			insttable[elsetarget]->execute();
+		}
+	}
+	void setExpr(Expr* p){
+		p_expr = p;
+	}
+	Expr* getExpr(){
+		return p_expr;
+	}
+	void setElseTarget(int elset){
+		elsetarget = elset;
+	}
+	int getElseTarget(){
+		return elsetarget;
+	}
+=======
 	IfStmt(Expr* p, int e);
 	string toString();
 	void execute();
-};
+>>>>>>> master
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
