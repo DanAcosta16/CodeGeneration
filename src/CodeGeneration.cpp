@@ -1,6 +1,6 @@
 //============================================================================
 // Name        : CodeGeneration.cpp
-// Author      : 
+// Author      : Daniel, Guillermo
 // Version     :
 // Copyright   : Your copyright notice
 // Description : Hello World in C++, Ansi-style
@@ -152,11 +152,6 @@ int InFixExpr::eval(){
 	return result;
 
 }
-<<<<<<< guillegonzalezf-patch-1-1
-=======
-
->>>>>>> master
-
 class Stmt{ // statements are executed!
 private:
 	string name;
@@ -278,7 +273,7 @@ public:
 		elsetarget = e;
 	}
 	~IfStmt();
-<<<<<<< guillegonzalezf-patch-1-1
+
 	string toString(){
 		return p_expr->toString();
 	}
@@ -311,11 +306,11 @@ public:
 	int getElseTarget(){
 		return elsetarget;
 	}
-=======
+
 	IfStmt(Expr* p, int e);
 	string toString();
 	void execute();
->>>>>>> master
+
 class WhileStmt : public Stmt{ //Dan
 private:
 	Expr* p_expr;
